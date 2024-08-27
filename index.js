@@ -8,7 +8,7 @@ import { tg } from './telegram/telegram.js'
 //TODO горячая подгрузка конфигов
 const settings = checkSettings();
 
-let bot = tg(generateMessagesForDepartments, settings, handler, settings.TOKEN, settings.BOT_NAME, settings.HELP_MESSAGE, settings.ADMINS, settings.GROUPS, settings.DELAY_LIST, settings.BANNED);
+let bot = tg(generateMessagesForDepartments, settings, handler, settings.TOKEN, settings.BOT_NAME, settings.HELP_MESSAGE, settings.ADMINS, settings.REPORT, settings.BANNED, settings.DELAY_BETWEEN_MESSAGES, settings.DELAY_BETWEEN_GENERATIONS,);
 
 function handler(){
 

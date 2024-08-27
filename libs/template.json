@@ -3,13 +3,13 @@
     "TOKEN": "",
     "BOT_NAME": "",
     "ADMINS": [],
-    "GROUPS" : {
-        "report" : ""
-    },
+    "REPORT" : "",
     "BANNED" : [],
-    "DELAY_LIST" : [],
+    "DELAY_BETWEEN_GENERATIONS" : 8.28e+7,
+    "DELAY_BETWEEN_MESSAGES" : 3000,
+    
     "HELP_MESSAGE": "Этот бот позволит Вам составить примеры обращений. Обратите внимание что тут представлены только примерные образцы обращений что подходят для департаментов, Вы должны самолично всё проверить и поправить перед отправкой",
-
+    
     "LIST_OF_DEPARTMENTS": {
         "DEPARTMENT_1": {
             "name": "Department 1",
@@ -76,5 +76,7 @@
 
         }
     },
-    "EDITED": true
+
+    "EDITED": false
+
 }

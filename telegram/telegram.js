@@ -15,20 +15,18 @@ import {
 
 import { Queue } from '../telegram/Queue.js'
 
-import {chechAndLoadNewSettingsFile} from '../libs/chechAndLoadNewSettingsFile.js'
-const DELAY_BETWEEN_MESSAGES = 3000
-const DELAY_BETWEEN_COMPLAINS = 8.28e+7
+import {checkAndLoadNewSettingsFile} from '../libs/checkAndLoadNewSettingsFile.js'
 
-export function tg (complainsGenerator, complainsSettings, messageHandler, token, botName, botHelpMessage, admins = [], groups = {}, delayList = [], banned = []) {
+export function tg (complainsGenerator, complainsSettings, messageHandler, token, botName, botHelpMessage, admins = [], report, banned = [], delayMsg, delayGnr) {
 
-    return new TelegramBot(complainsGenerator, complainsSettings, messageHandler, token, botName, botHelpMessage, admins, groups, delayList, banned)
+    return new TelegramBot(complainsGenerator, complainsSettings, messageHandler, token, botName, botHelpMessage, admins, report, banned, delayMsg, delayGnr)
 
 }
 
 class TelegramBot {
     static #instance = null
 
-    constructor (complainsGenerator, complainsSettings, messageHandler, token, botName, botHelpMessage, admins, groups, delayList, banned) {
+    constructor (complainsGenerator, complainsSettings, messageHandler, token, botName, botHelpMessage, admins, report, banned, delayMsg, delayGnr) {
         if(TelegramBot.#instance) {
             return TelegramBot.#instance;
         }
@@ -45,12 +43,14 @@ class TelegramBot {
         this.waitBeforeCleanWatchList = 2.4e+6
         this.cleanWatchListTimer = null
         this.reportMinLength = 20
+        this.delayBetweenMessages = delayMsg
+        this.delayBetweenComplains = delayGnr
 
         this.owner = admins //пользователи которым доступны особые функции
-        this.groups = groups //объект с указанием каналов и групп имеющих значение для бота
+        this.report = report //объект с указанием каналов и групп имеющих значение для бота
         this.banned = banned //список пользователей которые были заблокированы (в этой программе не используется)
-        this.delayList = delayList //объект содержащий ключ в виде user_id и полями где в тч указано время следующей генерации сообщения для пользователя
-        this.queue = new Queue(DELAY_BETWEEN_MESSAGES)
+        this.delayList = {} //объект содержащий ключ в виде user_id и полями где в тч указано время следующей генерации сообщения для пользователя
+        this.queue = new Queue(this.delayBetweenMessages)
 
         this.isUpdating = false
         this.updData = null
@@ -89,7 +89,6 @@ class TelegramBot {
         body.append("timeout", timeout);
     
         options.body = body
-    
     
         fetch(`https://api.telegram.org/bot${this.apiKey}/getUpdates`, options)
     
@@ -276,7 +275,7 @@ class TelegramBot {
         if (data.my_chat_member?.chat) {
 
 
-            if ( !Object.values(this.groups).includes(data.my_chat_member.chat.id)) {
+            if ( !this.report === data.my_chat_member.chat.id) {
 
                 if (data.my_chat_member.from.username === `${this.botName}`) { return }
 
@@ -329,16 +328,16 @@ class TelegramBot {
 
                 let file = await this.downloadFile(data.message.document.file_id)
 
-                const reportAboutRefreshSettings = chechAndLoadNewSettingsFile(file, 'settings.json')
+                const reportAboutRefreshSettings = checkAndLoadNewSettingsFile(file, 'settings.json')
 
                 if (reportAboutRefreshSettings.ok) {
 
                     this.apiKey = file.data.TOKEN 
                     this.botName = file.data.BOT_NAME
                     this.owner = file.data.ADMINS
-                    this.groups = file.data.GROUPS
+                    this.report = file.data.REPORT
                     this.banned = file.data.BANNED
-                    this.delayList = file.data.DELAY_LIST
+                    this.delayList = {}
                     this.botHelpMessage = file.data.HELP_MESSAGE
                     this.complainsSettings = file.data
 
@@ -504,7 +503,7 @@ class TelegramBot {
                 //защита от множественного нажатия
                 if (this.delayList[chat_id]){
 
-                    if (Date.now() - this.delayList[chat_id].time > DELAY_BETWEEN_COMPLAINS) {
+                    if (Date.now() - this.delayList[chat_id].time > this.delayBetweenComplains) {
 
                         switch (chat_type) {
 
@@ -520,7 +519,7 @@ class TelegramBot {
                 
                         }
 
-                        let date = new Date(Date.now() + DELAY_BETWEEN_COMPLAINS);
+                        let date = new Date(Date.now() + this.delayBetweenComplains);
 
                         let options = {
                             year: '2-digit', // Год в формате '24'
@@ -542,7 +541,7 @@ class TelegramBot {
                             lastTap:Date.now(),
                             totalTap:0,
                             totalMessages:0,
-                            nextTime : Date.now() + DELAY_BETWEEN_COMPLAINS,
+                            nextTime : Date.now() + this.delayBetweenComplains,
                             nextTimeHumanReadible
             
                         }
@@ -579,7 +578,7 @@ class TelegramBot {
 
                     console.log('новый пользователь добавлен в бд');
 
-                    let date = new Date(Date.now() + DELAY_BETWEEN_COMPLAINS);
+                    let date = new Date(Date.now() + this.delayBetweenComplains);
 
                     let options = {
                         year: '2-digit', // Год в формате '24'
@@ -601,7 +600,7 @@ class TelegramBot {
                         lastTap:Date.now(),
                         totalTap:0,
                         totalMessages:0,
-                        nextTime : Date.now() + DELAY_BETWEEN_COMPLAINS,
+                        nextTime : Date.now() + this.delayBetweenComplains,
                         nextTimeHumanReadible
 
                     }
@@ -759,7 +758,7 @@ class TelegramBot {
 
     reportPrivate(chat_id, message_id) {
 
-        this.forwardMessage(this.groups.report, chat_id, message_id)
+        this.forwardMessage(this.report, chat_id, message_id)
 
         this.botReportWatchList.delete(`${chat_id}`)
 
