@@ -1,3 +1,5 @@
+import { debug } from '../libs/debug.js'
+
 import {
     getMe,
     sendMessage,
@@ -108,10 +110,10 @@ class TelegramBot {
 
                     } catch (error) {
 
-                        console.log('\nПри обработке сообщения:\n')
-                        console.log(update)
-                        console.log('\nИз телеграма была перхвачена ошибка:\n')
-                        console.log(error)
+                        console.error('\nПри обработке сообщения:\n')
+                        console.error(update)
+                        console.error('\nИз телеграма была перхвачена ошибка:\n')
+                        console.error(error)
 
                     }
 
@@ -126,7 +128,7 @@ class TelegramBot {
             }
     
         })
-        .catch(error => console.log(error))
+        .catch(error => console.error(error))
 
     }
 
@@ -149,7 +151,7 @@ class TelegramBot {
 
 
                     this.commandHandler(data,'forum')
-                    console.log('Сообщение из супергруппы-форума получено');
+                    debug('Сообщение из супергруппы-форума получено');
                     return
 
                 }
@@ -164,7 +166,7 @@ class TelegramBot {
 
                     if (data.message.entities) {
 
-                        console.log(`ЛС: получена команда ${data.message.text} от ${data.message.from.first_name} (${data.message.from.username}, ${data.message.from.id})`);
+                        debug(`ЛС: получена команда ${data.message.text} от ${data.message.from.first_name} (${data.message.from.username}, ${data.message.from.id})`);
                         
                         this.commandHandler(data,'private')
                         return
@@ -189,14 +191,14 @@ class TelegramBot {
 
                     
 
-                    console.log(`ЛС: получено сообщение: "${data.message.text}" от ${data.message.from.first_name} (@${data.message.from.username}, ${data.message.from.id})`);
+                    debug(`ЛС: получено сообщение: "${data.message.text}" от ${data.message.from.first_name} (@${data.message.from.username}, ${data.message.from.id})`);
                     return
 
                 } else {
 
 
                     this.commandHandler(data,'supergroup')
-                    console.log('Сообщение из группы получено');
+                    debug('Сообщение из группы получено');
                     return
 
                 }
@@ -213,7 +215,7 @@ class TelegramBot {
 
                 if (this.checkUser(data.callback_query.from.first_name, data.callback_query.from.id, data.callback_query.message.chat.id, data.callback_query.message.message_thread_id)) {
 
-                    console.log('Кнопку нажали в супергруппе-топике');
+                    debug('Кнопку нажали в супергруппе-топике');
                     return
 
                 }
@@ -228,7 +230,7 @@ class TelegramBot {
 
                     this.messageHandler(data.callback_query.data)
 
-                    console.log(`${data.callback_query.from.first_name} нажал на кнопку ${data.callback_query.data} в группе: ${data.callback_query.message.chat.title}`);
+                    debug(`${data.callback_query.from.first_name} нажал на кнопку ${data.callback_query.data} в группе: ${data.callback_query.message.chat.title}`);
                     return
                 }
 
@@ -239,7 +241,7 @@ class TelegramBot {
 
                 if (this.checkUser(data.callback_query.from.first_name, data.callback_query.from.id, data.callback_query.message.chat.id)) {
 
-                    console.log(`ЛС: нажата кнопка: ${data.callback_query.data} пользователем ${data.callback_query.from.first_name} (${data.callback_query.from.username}, ${data.callback_query.from.id})`);
+                    debug(`ЛС: нажата кнопка: ${data.callback_query.data} пользователем ${data.callback_query.from.first_name} (${data.callback_query.from.username}, ${data.callback_query.from.id})`);
 
                     this.buttonHandler(data, 'private', data.callback_query.from)
 
@@ -263,7 +265,7 @@ class TelegramBot {
         //     if ( Object.values(this.banned).includes(user => user === data.message.new_chat_participant.id)) {
 
         //         this.kickChatMember(data.message.chat.id, data.message.new_chat_participant.id)
-        //         console.log(`Пользователь ${data.message.new_chat_participant.first_name} кикнут из группы, поскольку находится в чёрном списке`);
+        //         debug(`Пользователь ${data.message.new_chat_participant.first_name} кикнут из группы, поскольку находится в чёрном списке`);
         //         return
         //     }
 
@@ -275,17 +277,18 @@ class TelegramBot {
         if (data.my_chat_member?.chat) {
 
 
-            if ( !this.report === data.my_chat_member.chat.id) {
+            if ( this.report === data.my_chat_member.chat.id) {
 
-                if (data.my_chat_member.from.username === `${this.botName}`) { return }
-
-                //автоудаление
-                //this.leaveChat(data.my_chat_member.chat.id)
-
+                this.sendMessage(data.my_chat_member.chat.id, `Бот успешно добавлен в ${data.my_chat_member.chat.type}. Теперь все сообщения что пользователи отсылают как ответы из департаментов будут пересылаться сюда`)
 
                 return
 
             }
+
+            debug(`Пользователь ${data.my_chat_member.from.first_name} (${data.my_chat_member.from.username}, ${data.my_chat_member.from.id}) попытался добавить этого бота в ${data.my_chat_member.chat.type}: ${data.my_chat_member.chat.title} с id: "${data.my_chat_member.chat.id}"`);
+            
+            //автоудаление
+            this.leaveChat(data.my_chat_member.chat.id)
 
             //Приветствие при добавлении
             //this.sendMessage(data.my_chat_member.chat.id, 'Всем привет!')
@@ -295,15 +298,15 @@ class TelegramBot {
 
         //Логгирование результатов вызова методов
         if (data.result?.text) {
-            //console.log(data.result.text)
+            //console.dir(data.result.text, {depth: null})
         }
         if(data.description) {
-            //console.log(data.description)
+            //console.dir(data.description, {depth: null})
         }
 
         if (data.message?.photo) {
 
-            console.log(`ЛС: получена фотография от ${data.message.from.first_name} (@${data.message.from.username}, ${data.message.from.id})`);
+            debug(`ЛС: получена фотография от ${data.message.from.first_name} (@${data.message.from.username}, ${data.message.from.id})`);
             
             if (this.botReportWatchList.has(`${data.message.chat.id}`)) {
     
@@ -356,7 +359,7 @@ class TelegramBot {
             }
 
 
-            console.log(`ЛС: получен документ от ${data.message.from.first_name} (@${data.message.from.username}, ${data.message.from.id})`);
+            debug(`ЛС: получен документ от ${data.message.from.first_name} (@${data.message.from.username}, ${data.message.from.id})`);
             
             if (this.botReportWatchList.has(`${data.message.chat.id}`)) {
     
@@ -423,7 +426,7 @@ class TelegramBot {
 
     banUser (first_name,user_id) {
 
-        console.log(`User ${first_name} banned`)
+        debug(`User ${first_name} banned`)
         this.banned[first_name] = user_id
 
     }
@@ -546,17 +549,17 @@ class TelegramBot {
             
                         }
 
-                        console.log('Пользователь есть в бд, времени прошло достаточно, генерируем текст, пользователь сброшен');
+                        debug('Пользователь есть в бд, времени прошло достаточно, генерируем текст, пользователь сброшен');
                         
                         
 
                         return
                     }
 
-                    console.log(`Пользователь ${from.first_name} (@${from.username} ${from.id}) Повторно нажимает кнопку ${command}`);
+                    debug(`Пользователь ${from.first_name} (@${from.username} ${from.id}) Повторно нажимает кнопку ${command}`);
                     
                     if (this.delayList[chat_id].spamer) {
-                        console.log('Пользователь спамил и заигнорен');
+                        debug('Пользователь спамил и заигнорен');
                         
                         return
                     }
@@ -568,15 +571,15 @@ class TelegramBot {
 
                     this.delayList[chat_id].totalTap++
 
-                    console.log(this.delayList[chat_id].totalTap);
+                    //debug(this.delayList[chat_id].totalTap);
                     
-                    console.log('Времени прошло недостаточно, пользователь проигорирован');
+                    debug('Времени прошло недостаточно, пользователь проигорирован');
 
                     return
 
                 } else {
 
-                    console.log('новый пользователь добавлен в бд');
+                    debug(`новый пользователь ${from.first_name} (@${from.username} ${from.id}) добавлен в бд`);
 
                     let date = new Date(Date.now() + this.delayBetweenComplains);
 
@@ -614,7 +617,7 @@ class TelegramBot {
 
                 this.messageGun(chat_id, messages)
 
-                console.log('Пользователю сгенерирован текст');
+                debug(`Пользователю ${from.first_name} (@${from.username} ${from.id}) сгенерирован текст`);
 
                 break
 
