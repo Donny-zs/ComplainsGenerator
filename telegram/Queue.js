@@ -1,4 +1,4 @@
-
+import { debug } from '../libs/debug.js'
 import { callTg } from '../telegram/callTg.js'
 
 export class Queue {
@@ -40,7 +40,7 @@ export class Queue {
 
         if (element.timesCalled > 3) {
 
-            console.log(`Превышено количество повторных попыток обращения к методу ${new URL(element.request.url).pathname.split('/').pop()}`)
+            debug(`Queue: Превышено количество повторных попыток обращения к методу ${new URL(element.request.url).pathname.split('/').pop()}`)
             this.remove()
             element.resolve({ok: false, data : 'Превышено количество попыток обращения к методу'})
             this.isBusy = false
@@ -51,15 +51,13 @@ export class Queue {
         const answer = callTg(element.request)
 
         answer.then( async (result) => {
-
-            console.log(result);
-            
+           
 
             if (result.ok) {
 
                 if (result.data.error_code === 429) {
 
-                    console.log('stop Spaming for ' + result.data.parameters.retry_after + ' seconds');
+                    debug('stop Spaming for ' + result.data.parameters.retry_after + ' seconds');
 
                     setTimeout(() => {
     

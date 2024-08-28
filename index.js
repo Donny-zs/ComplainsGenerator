@@ -16,9 +16,6 @@ function handler(){
 
 }
 
-//console.log(await bot.getFile('BQACAgIAAxkBAAIBQGbNdEMbflJ5D9p7BtsVSdAwGebHAAKVXAACgt9oSs7INSoE72nWNQQ'))
-//file_path: 'documents/file_0.json'
-
-
 // console.log('Пример генерации текста:');
 // console.log(generateMessagesForDepartments(settings))
+

@@ -276,6 +276,7 @@ class TelegramBot {
 
         if (data.my_chat_member?.chat) {
 
+            if (data.my_chat_member.from.username === data.my_chat_member.new_chat_member.user.username) {return}
 
             if ( this.report === data.my_chat_member.chat.id) {
 

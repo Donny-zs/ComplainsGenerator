@@ -11,7 +11,7 @@ export function checkSettings() {
 
     }catch(err){
         
-        console.log('Settings not found');
+        console.error('Settings not found');
         console.log('Creating new settings...');
         fs.writeFileSync('./settings.json', JSON.stringify(JSON.parse(fs.readFileSync('./libs/template.json', 'utf8')), null, 4), 'utf8');
         console.log('Settings successfully created');
@@ -26,9 +26,9 @@ export function checkSettings() {
 
     if (!settings.EDITED) {
 
-        console.log('Settings not edited et, or flag EDITED is forgoten to set to true');
+        console.error('Settings not edited et, or flag EDITED is forgoten to set to true');
         console.log('Please, edit settings.json and restart the program');
-        console.log('read REAMDME.md for more info');
+        console.warn('read REAMDME.md for more info');
         
         process.exit(1);
 
@@ -73,7 +73,7 @@ export function checkSettings1() {
             
             console.log('Settings successfully created');
             console.log('Please, edit settings.json and restart the program');
-            console.log('read REAMDME.md for more info');
+            console.warn('read REAMDME.md for more info');
             
             process.exit(1);
             
