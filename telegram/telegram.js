@@ -44,7 +44,7 @@ class TelegramBot {
         this.botSettingsWatch = false //флаг ожидания документа "settings.json" от одного из админов
         this.waitBeforeCleanWatchList = 2.4e+6
         this.cleanWatchListTimer = null
-        this.reportMinLength = 20
+        this.reportMinLength = 20 //Минимальная длина текста которая будет обработана как ответ от департамента
         this.delayBetweenMessages = delayMsg
         this.delayBetweenComplains = delayGnr
 
@@ -794,13 +794,43 @@ class TelegramBot {
     //Разедляет массив на отдельные сообщения и запихивает их в очередь
     messageGun(chat_id, messageArray, message_thread_id = null) {
 
+        const maxMessageLength = 3000
+
         for (let i = 0; i < messageArray.length; i++) {
+
+            //Напоминание о легальности
+            let message = `Обращение к департаменту "${messageArray[i].name}"\nЭлектронная почта:\n${messageArray[i].email}\n\n💥Внимательно прочтите, замените окончания в тексте, поставьте своё имя, помните, это лишь образец💥\n\n${messageArray[i].message}`
+
+            let messageSplit = []
+
+            if (message.length > maxMessageLength) {
+                
+                for (let i = 0; i < message.length; i += maxMessageLength) {
+                    messageSplit.push(message.substring(i, Math.min(i + maxMessageLength, message.length)));
+                }
+
+                for (let i = 0; i < messageSplit.length; i += 1) {
+
+                    if (i>0){
+                        messageSplit[i] = `В продолжение предыдущего сообщения:\n\n${messageSplit[i]}`
+                    }
+
+                    this.sendMessage(
+
+                        chat_id,
+                        messageSplit[i],
+                        {message_thread_id}
+                    
+                    ) 
+                }
+                
+                continue
+            }
 
             this.sendMessage(
 
                 chat_id,
-                //Напоминание о легальности и данные
-                `Обращение к департаменту "${messageArray[i].name}"\nЭлектронная почта:\n${messageArray[i].email}\n\n💥Внимательно прочтите, замените окончания в тексте, поставьте своё имя, помните, это лишь образец💥\n\n${messageArray[i].message}`,
+                message,
                 {message_thread_id}
             
             ) 
