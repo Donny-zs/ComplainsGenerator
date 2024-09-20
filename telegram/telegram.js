@@ -482,7 +482,7 @@ class TelegramBot {
 
     privateHandler(data){
         
-        switch (data.message.text) {
+        switch (data.message.text.toLowerCase()) {
 
             case '/start':
                 this.commandStart(data.message.chat.id,data.message.from.first_name)
